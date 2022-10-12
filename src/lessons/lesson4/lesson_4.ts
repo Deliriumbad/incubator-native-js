@@ -121,7 +121,7 @@ promiseName.then(onSuccess).then(print);
 // и выведите в консоль {name, age, city}
 
 let name = new Promise( resolve => {
-    setTimeout( ()=>{
+    setTimeout( ()=> {
         resolve({ name: "Anna" })
     }, 2000)
 })
