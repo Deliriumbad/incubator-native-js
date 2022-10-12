@@ -1,25 +1,51 @@
-import React, { useState } from 'react';
-import API from './API';
+import React, {useState} from 'react';
+import API, {MovieSearchResultType} from './API';
 import './lesson_3';
+import {Movie} from "./Movie";
+
+type SearchResultType = {
+    totalResults: string
+    movies: Array<MovieSearchResultType>
+};
 
 const Lesson3 = () => {
     const [searchName, setSearchName] = useState('');
-    const [serachResult, setSerachResult] = useState('');
+    const [searchResult, setSearchResult] = useState<string | SearchResultType>('');
     const [searchNameByType, setSearchNameByType] = useState('');
-    const [serachResultByType, setSerachResultByType] = useState('');
+    const [searchResultByType, setSearchResultByType] = useState<string | SearchResultType>('');
 
     const searchFilm = () => {
 
         API.searchFilmsByTitle(searchName)
+            .then(data => {
+                if(data.Response === 'True'){
+                    const result = {
+                        totalResults: data.totalResults,
+                        movies: data.Search
+                    }
+                    setSearchResult(result)
+                } else {
+                    setSearchResult(data.Error)
+                }
+            })
 
     };
 
     const searchByType = (e: React.MouseEvent<HTMLButtonElement>) => {
         const type: string = e.currentTarget.dataset.t ? e.currentTarget.dataset.t : '';
-        API.searchFilmsByType(searchNameByType, type)
-
+        API.searchFilmsByType(searchNameByType, type).then(data=>{
+        if (data.Response === 'True') {
+            const result = {
+                totalResults: data.totalResults,
+                movies: data.Search
+            };
+            setSearchResultByType(result);
+        } else {
+            setSearchResultByType(data.Error);
+        }
+    })
     }
-
+    console.log(searchResult)
     return (
         <div>
             <h1>Promises</h1>
@@ -28,20 +54,39 @@ const Lesson3 = () => {
                 <input type="text" value={searchName} onChange={(e) => setSearchName(e.currentTarget.value)}/>
                 <button onClick={searchFilm}>Search</button>
                 <div>
-                    {serachResult}
+                    {
+                        typeof searchResult === 'string' ?
+                            searchResult
+                            :
+                            <>
+                            <span>Total result: {searchResult.totalResults}</span>
+                                {searchResult.movies.map(m =>
+                                    <Movie key={m.imdbID} movie={m}>{m.Title} {m.Year}</Movie>)
+                                }
+                            </>
+                    }
                 </div>
             </div>
 
             <div>
                 <h3><p>Search by type:</p></h3>
-                <input type="text" value={searchNameByType} onChange={(e) => setSearchNameByType(e.currentTarget.value)}/>
+                <input type="text" value={searchNameByType}
+                       onChange={(e) => setSearchNameByType(e.currentTarget.value)}/>
                 <button onClick={searchByType} data-t='movie'>Movie</button>
                 <button onClick={searchByType} data-t='series'>Series</button>
                 <div>
-                    {serachResultByType}
+                    {typeof searchResultByType === "string" ?
+                        searchResultByType
+                        :
+                        <>
+                            <span>Total results: {searchResultByType.totalResults}</span>
+                            {searchResultByType.movies.map(m => <Movie key={m.imdbID} movie={m}/>)}
+                        </>
+                    }
                 </div>
             </div>
         </div>
     );
 }
+
 export default Lesson3;
